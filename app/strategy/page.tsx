@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Link from "next/link";
 import styles from "@/styles/strategy.module.css";
+import Navbar from "@/app/components/Navbar";
 
 const PLACEHOLDER_STRATEGY = `We are building a self-serve insights platform to help product managers synthesise strategy, data, and user feedback into actionable next steps. Our goal is to reduce decision-making friction and speed up iteration cycles across product teams.`;
 
@@ -164,22 +164,7 @@ export default function StrategyPage() {
 
   return (
     <div className={styles.container}>
-      <nav className={styles.nav}>
-        <div className={styles.navLinks}>
-          <Link href="/" className={styles.navLink}>
-            Home
-          </Link>
-          <Link href="/strategy" className={styles.navLink}>
-            Strategy
-          </Link>
-          <Link href="/data" className={styles.navLink}>
-            Data
-          </Link>
-          <Link href="/insights" className={styles.navLink}>
-            Insights
-          </Link>
-        </div>
-      </nav>
+      <Navbar />
 
       <div className={styles.card}>{renderContent()}</div>
     </div>

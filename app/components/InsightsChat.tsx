@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import styles from "@/styles/insights.module.css";
 
 interface Message {
@@ -13,7 +15,7 @@ export default function InsightsChat() {
     {
       role: "assistant",
       content:
-        "Hi! I've loaded your strategy and data. What would you like help with today?",
+        "Hello! I can help you analyse your research data and develop strategic insights. What would you like to know?",
     },
   ]);
   const [inputValue, setInputValue] = useState("");
@@ -21,60 +23,63 @@ export default function InsightsChat() {
   const [threadId, setThreadId] = useState<string | null>(null);
   const [currentAssistantMessage, setCurrentAssistantMessage] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const chatMessagesRef = useRef<HTMLDivElement>(null);
+  const isInitialMount = useRef(true);
+  const completeMessageRef = useRef("");
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (chatMessagesRef.current) {
+      chatMessagesRef.current.scrollTop = chatMessagesRef.current.scrollHeight;
+    }
   };
 
   useEffect(() => {
-    if (messages.length > 0) {
+    if (!isInitialMount.current) {
       scrollToBottom();
     }
+    isInitialMount.current = false;
   }, [messages]);
 
-  const clearChat = () => {
-    setMessages([
-      {
-        role: "assistant",
-        content:
-          "Hi! I've loaded your strategy and data. What would you like help with today?",
-      },
-    ]);
-    setThreadId(null);
-    setCurrentAssistantMessage("");
-  };
+  const sendMessage = async () => {
+    if (!inputValue.trim() || isLoading) return;
 
-  const sendMessage = async (userInput: string) => {
-    if (!userInput.trim()) return;
-
-    // Add user message to chat
-    const userMessage: Message = { role: "user", content: userInput.trim() };
-    setMessages((prev) => [...prev, userMessage]);
-    setInputValue("");
     setIsLoading(true);
-    setCurrentAssistantMessage("");
+    const userMessage = inputValue.trim();
+    setInputValue("");
+    setMessages((prev) => [...prev, { role: "user", content: userMessage }]);
 
     try {
+      // Get file IDs from localStorage
+      const storedFiles = localStorage.getItem("discovr_uploaded_files");
+      const fileIds = storedFiles
+        ? JSON.parse(storedFiles).map((file: { fileId: string }) => file.fileId)
+        : [];
+
       const response = await fetch("/api/insights-chat", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          message: userInput.trim(),
+          message: userMessage,
           threadId,
+          fileIds,
         }),
       });
 
       if (!response.ok) {
-        throw new Error("Failed to get response from assistant");
+        throw new Error("Failed to send message");
       }
 
-      const reader = response.body?.getReader();
-      if (!reader) throw new Error("No reader available");
+      if (!response.body) {
+        throw new Error("No response body");
+      }
 
+      // Handle streaming response
+      const reader = response.body.getReader();
       const decoder = new TextDecoder();
-      let currentThreadId = threadId;
+      setCurrentAssistantMessage("");
+      completeMessageRef.current = ""; // Reset the complete message
 
       while (true) {
         const { done, value } = await reader.read();
@@ -85,25 +90,30 @@ export default function InsightsChat() {
 
         for (const line of lines) {
           if (line.startsWith("data: ")) {
-            const data = JSON.parse(line.slice(6));
-
-            if (data.type === "text") {
-              setCurrentAssistantMessage((prev) => prev + data.text);
-              if (!currentThreadId) {
-                currentThreadId = data.threadId;
-                setThreadId(data.threadId);
+            try {
+              const data = JSON.parse(line.slice(6));
+              if (data.type === "text") {
+                const newText = data.text;
+                completeMessageRef.current += newText; // Update the complete message
+                setCurrentAssistantMessage(completeMessageRef.current); // Update the display
+                if (data.threadId) {
+                  setThreadId(data.threadId);
+                }
+              } else if (data.type === "error") {
+                console.error("Error from server:", data.error);
+                throw new Error(data.error);
               }
-            } else if (data.type === "error") {
-              throw new Error(data.error);
+            } catch (e) {
+              console.error("Error parsing SSE data:", e);
             }
           }
         }
       }
 
-      // Add the complete message to the chat history
+      // Add the complete assistant message to the messages array using the ref
       setMessages((prev) => [
         ...prev,
-        { role: "assistant", content: currentAssistantMessage },
+        { role: "assistant", content: completeMessageRef.current },
       ]);
       setCurrentAssistantMessage("");
     } catch (error) {
@@ -112,7 +122,8 @@ export default function InsightsChat() {
         ...prev,
         {
           role: "assistant",
-          content: "Sorry, I encountered an error. Please try again.",
+          content:
+            "Sorry, there was an error processing your request. Please try again.",
         },
       ]);
     } finally {
@@ -120,20 +131,28 @@ export default function InsightsChat() {
     }
   };
 
-  const handleSendMessage = () => {
-    sendMessage(inputValue);
+  const clearChat = () => {
+    setMessages([
+      {
+        role: "assistant",
+        content:
+          "Hello! I can help you analyse your research data and develop strategic insights. What would you like to know?",
+      },
+    ]);
+    setThreadId(null);
+    setCurrentAssistantMessage("");
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      handleSendMessage();
+      sendMessage();
     }
   };
 
   return (
     <div className={styles.chatContainer}>
-      <div className={styles.chatMessages}>
+      <div className={styles.chatMessages} ref={chatMessagesRef}>
         {messages.map((message, index) => (
           <div
             key={index}
@@ -143,12 +162,20 @@ export default function InsightsChat() {
                 : styles.assistantMessage
             }`}
           >
-            {message.content}
+            {message.role === "assistant" ? (
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                {message.content}
+              </ReactMarkdown>
+            ) : (
+              message.content
+            )}
           </div>
         ))}
         {currentAssistantMessage && (
           <div className={`${styles.message} ${styles.assistantMessage}`}>
-            {currentAssistantMessage}
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              {currentAssistantMessage}
+            </ReactMarkdown>
           </div>
         )}
         {isLoading && !currentAssistantMessage && (
@@ -177,7 +204,7 @@ export default function InsightsChat() {
         </button>
         <button
           className={styles.sendButton}
-          onClick={handleSendMessage}
+          onClick={sendMessage}
           disabled={isLoading || !inputValue.trim()}
         >
           Send

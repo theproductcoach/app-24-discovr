@@ -1,25 +1,11 @@
 import Link from "next/link";
 import styles from "./page.module.css";
+import Navbar from "@/app/components/Navbar";
 
 export default function Home() {
   return (
     <div className={styles.container}>
-      <nav className={styles.nav}>
-        <div className={styles.navLinks}>
-          <Link href="/" className={styles.navLink}>
-            Home
-          </Link>
-          <Link href="/strategy" className={styles.navLink}>
-            Strategy
-          </Link>
-          <Link href="/data" className={styles.navLink}>
-            Data
-          </Link>
-          <Link href="/insights" className={styles.navLink}>
-            Insights
-          </Link>
-        </div>
-      </nav>
+      <Navbar />
 
       <main className={styles.hero}>
         <h1 className={styles.title}>Discovr</h1>
