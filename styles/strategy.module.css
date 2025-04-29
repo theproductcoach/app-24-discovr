@@ -1,0 +1,376 @@
+.container {
+    min-height: 100vh;
+    width: 100%;
+    background-color: #020617;
+    background: radial-gradient(circle at 50% 50%, #0f172a 0%, #020617 100%);
+    padding: 6rem 1rem 2rem;
+    position: relative;
+}
+
+.container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 100vh;
+    background: radial-gradient(circle at 50% 0%, rgba(37, 99, 235, 0.15), transparent 70%);
+    pointer-events: none;
+}
+
+.card {
+    position: relative;
+    max-width: 800px;
+    margin: 0 auto;
+    background: rgba(30, 41, 59, 0.4);
+    border-radius: 24px;
+    padding: 2.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(12px);
+    box-shadow:
+        0 8px 20px rgba(0, 0, 0, 0.3),
+        0 0 0 1px rgba(255, 255, 255, 0.1),
+        0 0 40px rgba(37, 99, 235, 0.1);
+    z-index: 1;
+}
+
+.nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(10px);
+    z-index: 100;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow:
+        0 4px 6px -1px rgba(0, 0, 0, 0.1),
+        0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.navLinks {
+    display: flex;
+    gap: 3rem;
+    padding: 0 1.5rem;
+}
+
+.navLink {
+    color: rgba(255, 255, 255, 0.8);
+    text-decoration: none;
+    font-size: 0.95rem;
+    font-weight: 500;
+    padding: 0.5rem 0;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.navLink::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: linear-gradient(to right, #60a5fa, #3b82f6);
+    transition: width 0.2s ease;
+    border-radius: 2px;
+}
+
+.navLink:hover {
+    color: #fff;
+}
+
+.navLink:hover::after {
+    width: 100%;
+}
+
+.section {
+    margin-bottom: 3rem;
+}
+
+.section:last-child {
+    margin-bottom: 0;
+}
+
+.heading {
+    font-size: 2rem;
+    font-weight: 600;
+    color: #f8fafc;
+    margin-bottom: 1.5rem;
+    letter-spacing: -0.02em;
+}
+
+.subheading {
+    font-size: 1.5rem;
+    font-weight: 500;
+    color: #e2e8f0;
+    margin: 2rem 0 1rem;
+    letter-spacing: -0.01em;
+}
+
+.textarea {
+    width: 100%;
+    min-height: 160px;
+    padding: 1.25rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    font-size: 1rem;
+    line-height: 1.6;
+    color: #f8fafc;
+    background: rgba(15, 23, 42, 0.6);
+    resize: vertical;
+    transition: all 0.2s ease;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.textarea::placeholder {
+    color: rgba(148, 163, 184, 0.8);
+}
+
+.textarea:focus {
+    outline: none;
+    border-color: #3b82f6;
+    background: rgba(15, 23, 42, 0.8);
+    box-shadow:
+        inset 0 2px 4px rgba(0, 0, 0, 0.1),
+        0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+.content {
+    color: #f8fafc;
+    font-size: 1.1rem;
+    line-height: 1.7;
+    white-space: pre-wrap;
+    padding: 1.5rem;
+    text-align: left;
+    max-width: 720px;
+    margin: 0 auto;
+    background: transparent;
+    border-radius: 12px;
+    min-height: 160px;
+}
+
+.content:first-of-type {
+    font-size: 1.2rem;
+    line-height: 1.6;
+    font-weight: 400;
+    color: rgba(248, 250, 252, 0.9);
+    margin-bottom: 1rem;
+}
+
+/* Add styles for metrics list alignment */
+.metricsContent {
+    composes: content;
+    padding-left: 1.5rem;
+    /* Standard padding for list */
+}
+
+.saveContainer {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.saveMessage {
+    color: #4ade80;
+    font-size: 0.95rem;
+    font-weight: 500;
+    opacity: 0;
+    animation: fadeInOut 2s ease forwards;
+}
+
+.button {
+    background: linear-gradient(to bottom right, #f8fafc, #e2e8f0);
+    color: #1e40af;
+    border: none;
+    padding: 1rem 2.5rem;
+    font-size: 1.125rem;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    box-shadow:
+        0 4px 10px rgba(0, 0, 0, 0.2),
+        0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+
+.button:hover {
+    background: linear-gradient(to bottom right, #ffffff, #f8fafc);
+    transform: translateY(-1px);
+    box-shadow:
+        0 6px 15px rgba(0, 0, 0, 0.3),
+        0 0 0 1px rgba(255, 255, 255, 0.15),
+        0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.button:active {
+    transform: translateY(0);
+    background: linear-gradient(to bottom right, #e2e8f0, #cbd5e1);
+    box-shadow:
+        0 2px 5px rgba(0, 0, 0, 0.2),
+        0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+
+@keyframes fadeInOut {
+    0% {
+        opacity: 0;
+    }
+
+    15% {
+        opacity: 1;
+    }
+
+    85% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0;
+    }
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding: 5rem 1rem 1rem;
+    }
+
+    .card {
+        padding: 1.75rem;
+        border-radius: 20px;
+    }
+
+    .heading {
+        font-size: 1.75rem;
+    }
+
+    .subheading {
+        font-size: 1.25rem;
+    }
+
+    .navLinks {
+        gap: 1.5rem;
+    }
+
+    .textarea {
+        padding: 1rem;
+    }
+}
+
+.metricsInputContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.metricRow {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.metricInput {
+    flex: 1;
+    padding: 0.75rem 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    font-size: 1rem;
+    line-height: 1.5;
+    color: #f8fafc;
+    background: rgba(15, 23, 42, 0.6);
+    transition: all 0.2s ease;
+}
+
+.metricInput:focus {
+    outline: none;
+    border-color: #3b82f6;
+    background: rgba(15, 23, 42, 0.8);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+.removeMetricButton {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 6px;
+    background: rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+    font-size: 1.25rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.removeMetricButton:hover {
+    background: rgba(239, 68, 68, 0.3);
+}
+
+.addMetricButton {
+    align-self: flex-start;
+    padding: 0.5rem 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    background: rgba(15, 23, 42, 0.6);
+    color: #60a5fa;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.addMetricButton:hover {
+    background: rgba(15, 23, 42, 0.8);
+    border-color: rgba(96, 165, 250, 0.3);
+}
+
+.metricsDisplayContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.metricDisplayRow {
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-start;
+}
+
+.metricBullet {
+    color: #60a5fa;
+    font-size: 1.25rem;
+    line-height: 1.5;
+}
+
+.metricText {
+    color: #f8fafc;
+    font-size: 1.1rem;
+    line-height: 1.6;
+}
+
+@media (max-width: 768px) {
+    .metricInput {
+        padding: 0.625rem 0.875rem;
+        font-size: 0.95rem;
+    }
+
+    .removeMetricButton {
+        width: 28px;
+        height: 28px;
+        font-size: 1.1rem;
+    }
+
+    .addMetricButton {
+        padding: 0.375rem 0.875rem;
+        font-size: 0.9rem;
+    }
+
+    .metricText {
+        font-size: 1rem;
+    }
+}
