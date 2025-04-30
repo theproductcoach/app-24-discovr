@@ -24,21 +24,71 @@ export default function InsightsChat() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const isInitialMount = useRef(true);
   const chatMessagesRef = useRef<HTMLDivElement>(null);
+  const userHasScrolled = useRef(false);
+  const shouldAutoScroll = useRef(true);
+  const lastMessageLength = useRef(0);
 
-  const scrollToBottom = () => {
-    if (chatMessagesRef.current) {
+  // Track when user manually scrolls
+  const handleScroll = () => {
+    if (!chatMessagesRef.current || !isLoading) return;
+    
+    const { scrollTop, scrollHeight, clientHeight } = chatMessagesRef.current;
+    const isAtBottom = Math.abs(scrollHeight - scrollTop - clientHeight) < 10;
+    
+    // If not at bottom and content has changed, user has scrolled up
+    if (!isAtBottom) {
+      userHasScrolled.current = true;
+      shouldAutoScroll.current = false;
+    } else {
+      // If user scrolls back to bottom, resume auto-scrolling
+      shouldAutoScroll.current = true;
+    }
+  };
+
+  // Modified scroll function that respects user's position
+  const scrollToBottom = (force = false) => {
+    if (!chatMessagesRef.current) return;
+    
+    // Only scroll if we should auto-scroll or force is true
+    if (shouldAutoScroll.current || force) {
       const { scrollHeight, clientHeight } = chatMessagesRef.current;
       chatMessagesRef.current.scrollTop = scrollHeight - clientHeight;
     }
   };
 
+  // Track content changes and scroll accordingly
   useEffect(() => {
-    if (!isInitialMount.current && messages.length > 1) {
-      scrollToBottom();
-    } else {
+    if (isInitialMount.current) {
       isInitialMount.current = false;
+      scrollToBottom(true);
+      return;
     }
-  }, [messages]);
+
+    // Get the last message
+    const lastMessage = messages[messages.length - 1];
+    
+    // If it's an assistant message and we're loading
+    if (lastMessage?.role === 'assistant' && isLoading) {
+      // Check if content length has changed significantly
+      if (lastMessage.content.length > lastMessageLength.current + 50) {
+        lastMessageLength.current = lastMessage.content.length;
+        scrollToBottom(); // This will respect shouldAutoScroll
+      }
+    } else {
+      // New messages (not streaming) - force scroll
+      scrollToBottom(true);
+      lastMessageLength.current = lastMessage?.content.length || 0;
+    }
+  }, [messages, isLoading]);
+
+  // Set up scroll event listener
+  useEffect(() => {
+    const chatContainer = chatMessagesRef.current;
+    if (chatContainer) {
+      chatContainer.addEventListener('scroll', handleScroll);
+      return () => chatContainer.removeEventListener('scroll', handleScroll);
+    }
+  }, []);
 
   const sendMessage = async () => {
     const userMessage = inputValue.trim();
@@ -46,6 +96,12 @@ export default function InsightsChat() {
 
     setIsLoading(true);
     setInputValue("");
+    
+    // Reset scroll tracking when sending new message
+    userHasScrolled.current = false;
+    shouldAutoScroll.current = true;
+    lastMessageLength.current = 0;
+    
     setMessages((prev) => [...prev, { role: "user", content: userMessage }]);
 
     try {
@@ -54,14 +110,14 @@ export default function InsightsChat() {
       const fileIds = storedFiles
         ? JSON.parse(storedFiles).map((file: { fileId: string }) => file.fileId)
         : [];
-
+      
       // Include the strategy, metrics and data in the message for context
       const strategy = localStorage.getItem("discovr_strategy") || "";
       const metrics = JSON.parse(
         localStorage.getItem("discovr_metrics") || "[]"
       );
       const data = localStorage.getItem("discovr_data") || "";
-
+      
       // Construct contextual prompt if there's any saved data
       let contextualPrompt = userMessage;
       if (strategy || metrics.length > 0 || data) {
@@ -78,9 +134,9 @@ export default function InsightsChat() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          message: contextualPrompt,
-          threadId,
+        body: JSON.stringify({ 
+          message: contextualPrompt, 
+          threadId, 
           fileIds,
         }),
       });
@@ -161,6 +217,11 @@ export default function InsightsChat() {
       },
     ]);
     setThreadId(null);
+    
+    // Reset scroll tracking
+    userHasScrolled.current = false;
+    shouldAutoScroll.current = true;
+    lastMessageLength.current = 0;
   };
 
   // Thinking animation component
@@ -174,7 +235,10 @@ export default function InsightsChat() {
 
   return (
     <div className={styles.chatContainer}>
-      <div className={styles.chatMessages} ref={chatMessagesRef}>
+      <div 
+        className={styles.chatMessages} 
+        ref={chatMessagesRef}
+      >
         {messages.map((message, index) => (
           <div
             key={index}

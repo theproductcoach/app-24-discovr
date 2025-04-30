@@ -1,0 +1,32 @@
+Demo Research Data – Candidate Interview Platform
+
+User Interviews – Common Themes:
+- “I wasn’t sure what to expect from the assessments.”
+- “I left halfway because I didn’t feel like I was making progress.”
+- “A personalised plan after the first questions would make me stick around.”
+- “The UI was clean, but I got overwhelmed by too many steps.”
+
+Product Feedback:
+- 48% of users said they'd return if they received tailored feedback early
+- Email reminder with tips had a 23% re-engagement rate
+- Users preferred mini-assessments over full-length tests
+
+Usability Issues (Support Tickets):
+- 31 users couldn’t restart after partial progress
+- Confusion about how many steps remain in the onboarding flow
+- Multiple requests to bookmark or ‘save for later’
+
+Behavioural Metrics:
+- 67% completion rate when a dashboard is shown after 3 questions
+- Without feedback, 52% of users exit before question 5
+- When assessment type is explained in onboarding, bounce rate drops by 18%
+
+Hypotheses from PM team:
+- Users want instant value (progress tracking or feedback) within 90 seconds
+- Providing a "You vs Others" benchmark early boosts engagement
+- Delayed onboarding is less effective than fast, learn-as-you-go models
+
+Top Requests from Candidates:
+- “Can I see what roles I qualify for right now?”
+- “Let me test one thing at a time, not a full suite of skills”
+- “Send me feedback even if I don’t finish”
