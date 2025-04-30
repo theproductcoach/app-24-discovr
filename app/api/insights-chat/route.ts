@@ -1,5 +1,4 @@
 import { OpenAI } from "openai";
-import { NextResponse } from "next/server";
 
 // Configure for edge runtime and dynamic execution
 export const runtime = 'edge';
