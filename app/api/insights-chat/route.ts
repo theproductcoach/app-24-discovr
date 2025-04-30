@@ -1,86 +1,124 @@
 import { OpenAI } from "openai";
 import { NextResponse } from "next/server";
 
-// Initialize OpenAI client with server-side API key
+// Configure for edge runtime and dynamic execution
+export const runtime = 'edge';
+
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
 export async function POST(req: Request) {
-  try {
-    const { message, threadId, fileIds } = await req.json();
+  const encoder = new TextEncoder();
 
+  try {
+    console.log("Received POST request to /api/insights-chat");
+    
+    // Parse request body
+    const { message, threadId, fileIds } = await req.json();
+    console.log("Request data:", { message, threadId, fileIdsLength: fileIds?.length || 0 });
+    
     if (!message) {
-      return NextResponse.json({ error: "No message provided." }, { status: 400 });
+      console.log("Error: No message provided");
+      return new Response(
+        JSON.stringify({ error: "No message provided" }), 
+        { status: 400, headers: { "Content-Type": "application/json" } }
+      );
     }
 
     const assistantId = process.env.OPENAI_ASSISTANT_ID;
     if (!assistantId) {
-      throw new Error("Missing OpenAI Assistant ID. Check your environment variables.");
+      console.log("Error: Missing OpenAI Assistant ID");
+      throw new Error("Missing OpenAI Assistant ID");
     }
+    console.log("Using assistant ID:", assistantId);
 
-    let finalThreadId = threadId;
-
-    // Create a new thread if one does not exist
-    if (!finalThreadId) {
+    // Create or use existing thread
+    let currentThreadId = threadId;
+    if (!currentThreadId) {
+      console.log("Creating new thread");
       const thread = await openai.beta.threads.create();
-      finalThreadId = thread.id;
+      currentThreadId = thread.id;
+      console.log("New thread created with ID:", currentThreadId);
+    } else {
+      console.log("Using existing thread with ID:", currentThreadId);
     }
-    type FlexibleMessageCreateParams = {
-      role: "user";
-      content: string;
-      file_ids?: string[];
-    };
-    // Step 1: Create a message inside the thread (with optional files attached)
-    await openai.beta.threads.messages.create(threadId, {
+
+    // Add message to thread - using just the content parameter
+    console.log("Creating message in thread");
+    await openai.beta.threads.messages.create(currentThreadId, {
       role: "user",
-      content: message,
-      file_ids: fileIds?.length ? fileIds : undefined,
-    } as FlexibleMessageCreateParams);
-
-    // Step 2: Start a run on that thread
-    // OpenAI SDK types outdated - file_ids supported at runtime, ignore TS error
-
-    const run = await openai.beta.threads.runs.create(finalThreadId, {
-      assistant_id: assistantId,
-      instructions: "Use the uploaded research files and provided strategy context to generate insights.",
+      content: message
     });
+    console.log("Message created successfully");
 
-    // Step 3: Stream the assistant's response
-    const encoder = new TextEncoder();
+    // Handle file attachments if any (in a separate request if needed)
+    if (fileIds?.length) {
+      console.log(`Files available but handling separately: ${fileIds.length} file(s)`);
+      // Files should be attached to the assistant or handled differently
+      // This would typically be done when setting up the assistant, not per message
+    }
+
+    // Create stream
+    console.log("Creating stream");
     const stream = new TransformStream();
     const writer = stream.writable.getWriter();
 
-    async function pollRun() {
-      let runStatus = await openai.beta.threads.runs.retrieve(finalThreadId!, run.id);
-
-      while (runStatus.status === "queued" || runStatus.status === "in_progress") {
-        await new Promise(resolve => setTimeout(resolve, 1000)); // Poll every second
-        runStatus = await openai.beta.threads.runs.retrieve(finalThreadId!, run.id);
-      }
-
-      if (runStatus.status === "completed") {
-        const messages = await openai.beta.threads.messages.list(finalThreadId!);
-        const lastMessage = messages.data.find(msg => msg.role === "assistant");
-
-        if (lastMessage && lastMessage.content[0]?.type === "text") {
-          const text = lastMessage.content[0].text.value;
-          await writer.write(encoder.encode(`data: ${JSON.stringify({ text, threadId: finalThreadId })}\n\n`));
-        }
-      } else {
-        throw new Error(`Run ended with status: ${runStatus.status}`);
-      }
-
-      await writer.close();
-    }
-
-    pollRun().catch(async (err) => {
-      console.error("Error during pollRun:", err);
-      await writer.write(encoder.encode(`data: ${JSON.stringify({ error: "An error occurred during processing." })}\n\n`));
-      await writer.close();
+    // Start the run with streaming and file search tool
+    console.log("Starting run with streaming");
+    const run = await openai.beta.threads.runs.create(currentThreadId, {
+      assistant_id: assistantId,
+      stream: true,
+      tools: [{ type: "file_search" }]
     });
+    console.log("Run created with streaming");
 
-    return new NextResponse(stream.readable, {
+    // Process the stream
+    (async () => {
+      try {
+        console.log("Processing stream");
+        for await (const chunk of run) {
+          console.log("Received chunk:", chunk.event);
+          if (chunk.event === "thread.message.delta" && chunk.data?.delta?.content) {
+            const content = chunk.data.delta.content;
+            console.log("Content delta received:", content);
+            if (Array.isArray(content)) {
+              const textContent = content
+                .filter(item => item.type === "text")
+                .map(item => item.text?.value)
+                .filter(Boolean)
+                .join("");
+
+              if (textContent) {
+                console.log("Streaming text content:", textContent);
+                await writer.write(
+                  encoder.encode(
+                    `data: ${JSON.stringify({
+                      text: textContent,
+                      threadId: currentThreadId,
+                    })}\n\n`
+                  )
+                );
+              }
+            }
+          }
+        }
+        console.log("Stream completed");
+      } catch (error) {
+        console.error("Stream processing error:", error);
+        await writer.write(
+          encoder.encode(
+            `data: ${JSON.stringify({ error: "Stream processing failed" })}\n\n`
+          )
+        );
+      } finally {
+        console.log("Closing writer");
+        await writer.close();
+      }
+    })();
+
+    console.log("Returning streaming response");
+    return new Response(stream.readable, {
       headers: {
         "Content-Type": "text/event-stream",
         "Cache-Control": "no-cache",
@@ -89,7 +127,10 @@ export async function POST(req: Request) {
     });
 
   } catch (error) {
-    console.error("Error in POST:", error);
-    return NextResponse.json({ error: "An error occurred." }, { status: 500 });
+    console.error("API error:", error);
+    return new Response(
+      JSON.stringify({ error: "Internal server error" }), 
+      { status: 500, headers: { "Content-Type": "application/json" } }
+    );
   }
-}
+} 

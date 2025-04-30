@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import styles from "@/styles/insights.module.css";
-import InsightsChat from "@/app/components/InsightsChat";
+import InsightsChat from "../components/InsightsChat";
 import Navbar from "@/app/components/Navbar";
 
 interface SavedData {
