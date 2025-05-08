@@ -1,24 +1,96 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Discovr - AI-Powered Research Analysis Tool
+
+Discovr is a web application that helps users analyze research data and develop strategic insights using AI. The application allows users to input their research data, define their strategy and metrics, and get AI-powered analysis and recommendations.
+
+## Features
+
+- **Data Input**: Upload files or paste text to provide research data for analysis
+- **Strategy Definition**: Define your product strategy and key metrics
+- **AI-Powered Analysis**: Get insights and recommendations based on your data
+- **Interactive Chat**: Ask questions about your research data and get AI-powered responses
+- **Demo Mode**: Try out the application with sample data
+- **File Management**: Upload and manage research files
+- **Responsive Design**: Works on desktop and mobile devices
+
+## Tech Stack
+
+- **Frontend**: Next.js 14, React, TypeScript
+- **Styling**: CSS Modules
+- **AI Integration**: OpenAI API
+- **Vector Database**: Pinecone
+- **File Storage**: Local storage (with vector embeddings)
 
 ## Getting Started
 
-First, run the development server:
+1. Clone the repository
+2. Install dependencies:
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+   ```bash
+   npm install
+   ```
+
+3. Create a `.env.local` file with your API keys:
+
+   ```
+   OPENAI_API_KEY=your_openai_api_key
+   PINECONE_API_KEY=your_pinecone_api_key
+   PINECONE_ENVIRONMENT=your_pinecone_environment
+   PINECONE_INDEX=your_pinecone_index
+   ```
+
+4. Run the development server:
+
+   ```bash
+   npm run dev
+   ```
+
+5. Open [http://localhost:3000](http://localhost:3000) in your browser
+
+## Usage
+
+1. **Data Input**:
+   - Upload research files (PDF, TXT, DOCX)
+   - Paste research data directly
+   - Files are processed and stored with vector embeddings
+
+2. **Strategy Definition**:
+   - Define your product strategy
+   - Set key metrics to track
+   - Save for future reference
+
+3. **AI Analysis**:
+   - Get AI-powered insights based on your data
+   - Ask questions in the chat interface
+   - Receive recommendations and analysis
+
+4. **Demo Mode**:
+   - Toggle demo mode to try the application with sample data
+   - Sample data includes strategy, metrics, and research data
+   - Perfect for testing and demonstration purposes
+
+## Project Structure
+
+```
+app/
+├── api/              # API routes
+├── components/       # React components
+├── data/            # Data input page
+├── insights/        # Insights page
+├── strategy/        # Strategy page
+└── styles/          # CSS modules
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Contributing
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Push to the branch
+5. Create a Pull Request
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
 
 ## Learn More
 
