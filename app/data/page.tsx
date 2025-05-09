@@ -429,10 +429,17 @@ export default function DataPage() {
             Not sure what data to capture? Let Discovr guide you.
           </p>
           <button
-            className={`${styles.button} ${styles.generateButton}`}
+            className={styles.button}
             onClick={handleGenerateQuestions}
+            disabled={true}
+            style={{ opacity: 0.5, cursor: "not-allowed" }}
           >
             Generate Interview Questions
+            <span
+              style={{ display: "block", fontSize: "0.8em", marginTop: "4px" }}
+            >
+              (Coming soon!)
+            </span>
           </button>
         </div>
       </div>
